@@ -1,10 +1,10 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import { getGithubPreviewProps, parseJson } from 'next-tinacms-github'
-import { GetStaticProps } from 'next'
-import { usePlugin } from 'tinacms'
-import { useGithubJsonForm } from 'react-tinacms-github'
+import Head from "next/head"
+import Image from "next/image"
+import styles from "../styles/Home.module.css"
+import { PreviewData, getGithubPreviewProps, parseJson } from "next-tinacms-github"
+import { GetStaticProps } from "next"
+import { usePlugin } from "tinacms"
+import { useGithubJsonForm } from "react-tinacms-github"
 
 export default function Home({ file }) {
   const formOptions = {
@@ -92,7 +92,7 @@ export const getStaticProps: GetStaticProps = async function({
   }) {
   if (preview) {
     return getGithubPreviewProps({
-      ...previewData,
+      ...(previewData as PreviewData<any>),
       fileRelativePath: 'content/home.json',
       parse: parseJson,
     })
