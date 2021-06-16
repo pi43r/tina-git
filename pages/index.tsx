@@ -1,18 +1,29 @@
 import Head from "next/head"
 import Image from "next/image"
 import styles from "../styles/Home.module.css"
-import { PreviewData, getGithubPreviewProps, parseJson } from "next-tinacms-github"
+import {
+  PreviewData,
+  getGithubPreviewProps,
+  parseJson,
+} from "next-tinacms-github"
 import { GetStaticProps } from "next"
 import { usePlugin } from "tinacms"
 import { useGithubJsonForm } from "react-tinacms-github"
 
+import ReactDOM from "react-dom"
+import React, { useRef, useState } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { Text, OrbitControls } from "@react-three/drei"
+
 export default function Home({ file }) {
   const formOptions = {
-    label: 'Home',
-    fields: [{
-      name: 'title',
-      component: 'text'
-    }]
+    label: "Home",
+    fields: [
+      {
+        name: "title",
+        component: "text",
+      },
+    ],
   }
 
   const [data, form] = useGithubJsonForm(file, formOptions)
@@ -26,59 +37,27 @@ export default function Home({ file }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          {data.title}
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
+      <div className={styles.fullscreen}>
+        <Canvas>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2} minPolarAngle={Math.PI / 2} />
+          <Text
+            font="https://fonts.gstatic.com/s/raleway/v14/1Ptrg8zYS_SKggPNwK4vaqI.woff"
+            fontSize={1}
+            letterSpacing={-0.06}
+            anchorX="center"
+            anchorY="middle"
           >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+            {data.title}
+            <meshPhongMaterial color={[1,0,0]} />
+          </Text>
+        </Canvas>
+      </div>
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+      {/* <main className={styles.main}>
+        <h1 className={styles.title}>{data.title}</h1>
+      </main> */}
     </div>
   )
 }
@@ -86,14 +65,14 @@ export default function Home({ file }) {
 /**
  * Fetch data with getStaticProps based on 'preview' mode
  */
-export const getStaticProps: GetStaticProps = async function({
+export const getStaticProps: GetStaticProps = async function ({
   preview,
   previewData,
-  }) {
+}) {
   if (preview) {
     return getGithubPreviewProps({
       ...(previewData as PreviewData<any>),
-      fileRelativePath: 'content/home.json',
+      fileRelativePath: "content/home.json",
       parse: parseJson,
     })
   }
@@ -103,9 +82,33 @@ export const getStaticProps: GetStaticProps = async function({
       error: null,
       preview: false,
       file: {
-        fileRelativePath: 'content/home.json',
-        data: (await import('../content/home.json')).default,
+        fileRelativePath: "content/home.json",
+        data: (await import("../content/home.json")).default,
       },
     },
   }
+}
+
+function Box(props) {
+  // This reference will give us direct access to the mesh
+  const mesh = useRef()
+  // Set up state for the hovered and active state
+  const [hovered, setHover] = useState(false)
+  const [active, setActive] = useState(false)
+  // Subscribe this component to the render-loop, rotate the mesh every frame
+  useFrame((state, delta) => (mesh.current.rotation.x += 0.01))
+  // Return view, these are regular three.js elements expressed in JSX
+  return (
+    <mesh
+      {...props}
+      ref={mesh}
+      scale={active ? 1.5 : 1}
+      onClick={event => setActive(!active)}
+      onPointerOver={event => setHover(true)}
+      onPointerOut={event => setHover(false)}
+    >
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={hovered ? "hotpink" : "orange"} />
+    </mesh>
+  )
 }
